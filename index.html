@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>CyberIdle v13.6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="shell">
+
+<!-- ── OVERLAYS ──────────────────────────────────────────────── -->
+<div id="ov-sel" class="ov hidden">
+  <p class="ov-title">⚡ CYBER IDLE</p>
+  <p class="ov-sub">Choisissez votre héros — permanent entre les runs</p>
+  <div class="hcards" id="hcards"></div>
+</div>
+
+<div id="ov-go" class="ov hidden">
+  <div style="font-size:2.5rem;margin-bottom:8px">💀</div>
+  <div class="ov-title" style="color:var(--red)">RUN TERMINÉ</div>
+  <div id="go-inf" style="font-size:.8rem;color:var(--text3);margin-bottom:12px"></div>
+  <table id="go-tbl"></table>
+  <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-green btn-lg" id="btn-rep" style="max-width:180px">▶ NOUVEAU RUN</button>
+    <button class="btn btn-lg" id="btn-goH" style="max-width:180px">🏠 ACCUEIL</button>
+  </div>
+</div>
+
+<div id="ov-tuto" class="ov hidden" style="z-index:201;align-items:flex-start;justify-content:flex-start;padding-top:10px">
+  <p class="ov-title" style="width:100%;max-width:600px">📖 GUIDE v13.6</p>
+  <pre style="background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:.7rem;color:var(--text2);overflow:auto;white-space:pre;max-width:600px;width:100%;line-height:1.65;margin-bottom:12px;max-height:76vh;font-family:var(--font)">CYBER IDLE v13.1 — Guide rapide
+
+SLOTS D'ÉQUIPEMENT : Arme · Skin · Implant ×2 · Chaussures
+DPS = (ATQ × VitAtq + FlatDPS) × (1+%DPS) × (1+Crit)
+CRIT : valeur attendue intégrée au DPS (roll individuel en duel)
+ESQUIVE : chance % d'annuler un coup entier (run: par tick)
+PROSPÉRITÉ : index base 100, multiplie les chances de loot
+RELIQUES : min rareté Peu Commun, max 2/item, multi-sélection
+
+COMPÉTENCES → STATS :
+  Force → +5 ATQ/pt  · Dextérité → +2% Crit/pt
+  Endurance → +60 PV · Intelligence → +10% sorts
+  Agilité → +0.05 VitAtq +1% Esquive · Résistance → +35 Bouclier
+  Chance → +3 Prospérité · Perception → +5% crédits/kill
+
+LAB : +N% sur Base + Compétences + Équipement par niveau
+INVENTAIRE : drag & drop pour équiper · clic pour détail · filtres
+CRAFT → Amélioration : cliquer + pour ajouter item/relique
+CRAFT → Forge : 10 recettes avec pièces détachées
+BOUTIQUE : Épique & Légendaire · Reroll 30₵</pre>
+  <button class="btn btn-green" data-action="hide-tutorial" style="max-width:160px">✕ FERMER</button>
+</div>
+
+<!-- ── TOP BAR ───────────────────────────────────────────────── -->
+<div id="top">
+  <h1>⚡ <span>CYBER</span>IDLE</h1>
+  <div class="top-res" id="rc"><span>₵</span><strong>0</strong></div>
+  <div class="top-res" id="rg"><span>💎</span><strong>0</strong></div>
+  <button class="tbtn" data-action="show-tutorial">?</button>
+  <button class="tbtn" data-action="open-options">OPTIONS</button>
+  <button class="tbtn" id="btn-rst">RESET</button>
+</div>
+
+<!-- ── MAIN ──────────────────────────────────────────────────── -->
+<div id="main">
+
+  <!-- RUN -->
+  <div id="pg-home" class="pg active">
+    <div id="home-root"></div>
+  </div>
+
+  <!-- DUEL -->
+  <div id="pg-duel" class="pg">
+    <div class="sec-hdr">⚔ DUEL — L'adversaire devient plus fort à chaque victoire</div>
+    <div id="duel-inner" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
+      <div id="duel-sel" class="duel-sel">
+        <div class="opp-cards" id="opp-cards"></div>
+      </div>
+      <div id="duel-fight" style="display:none">
+        <div class="df-hdr">
+          <span id="df-turn-badge" class="turn-badge turn-p">TOUR</span>
+          <span id="df-turn-n" style="font-size:.7rem;color:var(--text4)"></span>
+          <button class="btn btn-green btn-sm" id="btn-endturn" style="margin-left:auto">Fin de tour ▶</button>
+          <button class="btn btn-sm" id="btn-duel-quit" style="margin-left:6px;color:var(--text4)">Abandon</button>
+        </div>
+        <div class="df-arena">
+          <div class="df-col">
+            <div class="combatant">
+              <div class="comb-name" id="dop-name"></div>
+              <div class="hp-line"><span id="dop-hp"></span></div>
+              <div class="bar-wrap" style="height:9px"><div class="bar-fill bar-en" id="dop-bar-hp" style="width:100%"></div></div>
+              <div class="hp-line" style="margin-top:4px"><span id="dop-sh"></span></div>
+              <div class="bar-wrap"><div class="bar-fill bar-sh" id="dop-bar-sh" style="width:100%"></div></div>
+              <div class="comb-stats" id="dop-stats"></div>
+              <div class="comb-eff" id="dop-eff"></div>
+            </div>
+            <div class="dl" id="duel-log"></div>
+          </div>
+          <div class="df-col">
+            <div class="combatant">
+              <div class="comb-name" id="dme-name"></div>
+              <div class="hp-line"><span id="dme-hp"></span></div>
+              <div class="bar-wrap" style="height:9px"><div class="bar-fill bar-hp" id="dme-bar-hp" style="width:100%"></div></div>
+              <div class="hp-line" style="margin-top:4px"><span id="dme-sh"></span></div>
+              <div class="bar-wrap"><div class="bar-fill bar-sh" id="dme-bar-sh" style="width:100%"></div></div>
+              <div class="comb-stats" id="dme-stats"></div>
+              <div class="comb-eff" id="dme-eff"></div>
+            </div>
+            <div style="margin-top:4px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                <span style="font-size:.7rem;color:var(--text3)">Énergie :</span>
+                <div class="en-pips" id="energy-pips"></div>
+                <span id="energy-txt" style="font-size:.7rem;color:var(--rar-r)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="duel-acts" id="duel-act-btns"></div>
+      </div>
+      <div id="duel-result" style="display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px;text-align:center">
+        <div id="dr-title" style="margin-bottom:12px"></div>
+        <div id="dr-rewards" style="font-size:.84rem;color:var(--text2);margin-bottom:16px"></div>
+        <button class="btn btn-green btn-lg" id="btn-duel-again" style="max-width:200px">⚔ NOUVEAU DUEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HÉROS -->
+  <div id="pg-hero" class="pg"><div id="hr-c"></div></div>
+
+  <!-- LAB -->
+  <div id="pg-upg" class="pg">
+    <div class="sec-hdr">LAB — bonus calculés sur Base + Compétences + Équipement</div>
+    <div class="upg-grid" id="upg-grid"></div>
+  </div>
+
+  <!-- MISSIONS -->
+  <div id="pg-missions" class="pg">
+    <div class="sec-hdr">MISSIONS — progression non rétroactive</div>
+    <div style="padding:12px 12px 0"><button class="btn btn-sm" data-action="restart-missions">↻ Regénérer les missions</button></div>
+    <div id="missions-list" class="missions-list"></div>
+  </div>
+
+  <!-- INVENTAIRE -->
+  <div id="pg-inv" class="pg">
+    <div class="inv-hdr">
+      <!-- Layout Diablo 3 : slots gauche | portrait héros | slots droite -->
+      <div class="d3-equip" id="d3-equip">
+        <!-- rempli par renderInv() -->
+      </div>
+      <!-- Sorts actifs -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px 3px">
+        <span style="font-size:.62rem;color:var(--text4)">SORTS ACTIFS (max 4)</span>
+      </div>
+      <div class="sp-slots-row" id="sp-slots-row"></div>
+    </div>
+    <div class="inv-filters" id="inv-filters"></div>
+    <div id="sell-all-row" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;padding:4px 12px 0;min-height:20px"></div>
+    <div class="inv-grid-scroll">
+      <div class="inv-grid" id="inv-grid"></div>
+    </div>
+    <!-- Barre de vente flottante (mode sélection) -->
+    <div class="inv-sel-bar hidden" id="inv-sel-bar">
+      <span id="sel-count" style="font-size:.8rem;font-weight:700;color:var(--text)"></span>
+      <span style="font-size:.75rem;color:var(--text3)">sélectionné(s)</span>
+      <span style="font-size:.8rem;font-weight:700;color:var(--gold);margin-left:auto" id="sel-total"></span>
+      <button class="btn btn-green btn-sm" data-action="sell-selected">Vendre ▶</button>
+      <button class="btn btn-sm" data-action="clear-inv-selection" style="color:var(--text4)">✕</button>
+    </div>
+    <!-- Item detail overlay -->
+    <div id="item-detail" class="hidden" style="position:absolute;inset:0;z-index:40;background:rgba(2,4,12,.88)">
+      <div class="item-detail-card">
+        <div id="item-detail-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIONS -->
+  <div id="pg-options" class="pg">
+    <div class="sec-hdr">OPTIONS</div>
+    <div id="options-root" style="padding:12px"></div>
+  </div>
+
+  <!-- CRAFT -->
+  <div id="pg-craft" class="pg">
+    <div class="craft-tabs">
+      <button class="craft-tab active" data-tab="enhance" data-action="set-craft-tab" data-tab="enhance">⚗ FUSION</button>
+      <button class="craft-tab" data-tab="forge" data-action="set-craft-tab" data-tab="forge">🔨 FORGE</button>
+    </div>
+    <!-- Enhance -->
+    <div id="craft-enhance" class="craft-lab">
+      <div id="ce-item-slot"></div>
+      <div style="font-size:.74rem;font-weight:700;color:var(--text3);margin:8px 0 5px">RELIQUES (max 2 par item)</div>
+      <div id="ce-rel-slot"></div>
+      <div id="enhance-preview" style="font-size:.78rem;color:var(--green);margin:8px 0 5px;min-height:18px"></div>
+      <button class="btn btn-green" id="btn-enhance" disabled data-action="do-enhance">⚗ Fusionner</button>
+      <div id="ce-log" style="font-size:.74rem;color:var(--green);margin-top:8px;min-height:18px"></div>
+    </div>
+    <!-- Forge -->
+    <div id="craft-recipes" class="craft-lab hidden">
+      <div id="recipes-list"></div>
+    </div>
+    <!-- Popup sélection item -->
+    <div id="craft-popup" class="popup-overlay hidden">
+      <div class="popup-box">
+        <div class="popup-title">Choisir un équipement</div>
+        <div id="popup-list"></div>
+        <button class="btn btn-sm btn-red" data-action="close-popup" style="margin-top:4px">✕ Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOUTIQUE -->
+  <div id="pg-bout" class="pg">
+    <div class="shop-hdr">
+      <span style="font-family:var(--font-h);font-size:.85rem;font-weight:700;letter-spacing:.06em">BOUTIQUE</span>
+      <span style="font-size:.72rem;color:var(--text3);margin-right:auto">Épique &amp; Légendaire</span>
+      <button class="btn btn-sm btn-orange" id="btn-reroll">🔄 Reroll (30₵)</button>
+    </div>
+    <div class="shop-filters" id="shop-filters"></div>
+    <div class="shop-body" id="shop-body"></div>
+  </div>
+
+</div><!-- /#main -->
+
+<!-- ── BOTTOM NAV ─────────────────────────────────────────────── -->
+<div id="bot">
+  <button class="nb active nb-run" data-pg="home"><span class="nb-icon">▶</span><span class="nb-badge hidden" id="run-notif-dot"></span>Run</button>
+  <button class="nb" data-pg="duel"><span class="nb-icon">⚔️</span>Duel</button>
+  <button class="nb" data-pg="hero"><span class="nb-icon">🧬</span>Héros</button>
+  <button class="nb" data-pg="upg"><span class="nb-icon">🧪</span>Lab</button>
+  <button class="nb" data-pg="missions"><span class="nb-icon">🎯</span>Missions</button>
+  <button class="nb" data-pg="inv"><span class="nb-icon">🎒</span>Inventaire</button>
+  <button class="nb" data-pg="craft"><span class="nb-icon">🔨</span>Craft</button>
+  <button class="nb" data-pg="bout"><span class="nb-icon">🛒</span>Boutique</button>
+</div>
+
+</div><!-- /#shell -->
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+<script src="state.js"></script>
+<script src="actions.js"></script>
+<script src="renderers.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
